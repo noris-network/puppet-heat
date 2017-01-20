@@ -84,15 +84,15 @@ class heat::api (
     } else {
       $service_ensure = 'stopped'
     }
-  }
 
-  service { 'heat-api':
-    ensure     => $service_ensure,
-    name       => $::heat::params::api_service_name,
-    enable     => $enabled,
-    hasstatus  => true,
-    hasrestart => true,
-    tag        => 'heat-service',
+    service { 'heat-api':
+      ensure     => $service_ensure,
+      name       => $::heat::params::api_service_name,
+      enable     => $enabled,
+      hasstatus  => true,
+      hasrestart => true,
+      tag        => 'heat-service',
+    }
   }
 
   heat_config {
