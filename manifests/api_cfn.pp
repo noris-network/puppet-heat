@@ -87,15 +87,14 @@ class heat::api_cfn (
     } else {
       $service_ensure = 'stopped'
     }
-  }
-
-  service { 'heat-api-cfn':
-    ensure     => $service_ensure,
-    name       => $::heat::params::api_cfn_service_name,
-    enable     => $enabled,
-    hasstatus  => true,
-    hasrestart => true,
-    tag        => 'heat-service',
+    service { 'heat-api-cfn':
+      ensure     => $service_ensure,
+      name       => $::heat::params::api_cfn_service_name,
+      enable     => $enabled,
+      hasstatus  => true,
+      hasrestart => true,
+      tag        => 'heat-service',
+    }
   }
 
   heat_config {
