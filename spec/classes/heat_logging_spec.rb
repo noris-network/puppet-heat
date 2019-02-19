@@ -24,6 +24,8 @@ describe 'heat::logging' do
      :instance_uuid_format => '[instance: %(uuid)s] ',
      :log_date_format => '%Y-%m-%d %H:%M:%S',
      :use_syslog => true,
+     :use_json => true,
+     :use_journal => true,
      :use_stderr => false,
      :log_facility => 'LOG_FOO',
      :log_dir => '/var/log',
@@ -56,10 +58,12 @@ describe 'heat::logging' do
   shared_examples 'basic default logging settings' do
     it 'configures heat logging settings with default values' do
       is_expected.to contain_oslo__log('heat_config').with(
-        :use_syslog => '<SERVICE DEFAULT>',
-        :use_stderr => '<SERVICE DEFAULT>',
-        :log_dir    => '/var/log/heat',
-        :debug      => '<SERVICE DEFAULT>',
+        :use_syslog  => '<SERVICE DEFAULT>',
+        :use_json    => '<SERVICE DEFAULT>',
+        :use_journal => '<SERVICE DEFAULT>',
+        :use_stderr  => '<SERVICE DEFAULT>',
+        :log_dir     => '/var/log/heat',
+        :debug       => '<SERVICE DEFAULT>',
       )
     end
   end
@@ -68,6 +72,8 @@ describe 'heat::logging' do
     it 'configures heat logging settings with non-default values' do
       is_expected.to contain_oslo__log('heat_config').with(
         :use_syslog          => true,
+        :use_json            => true,
+        :use_journal         => true,
         :use_stderr          => false,
         :syslog_log_facility => 'LOG_FOO',
         :log_dir             => '/var/log',

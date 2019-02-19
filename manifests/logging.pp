@@ -12,6 +12,14 @@
 #    (Optional) Use syslog for logging.
 #    Defaults to $::os_service_default.
 #
+#  [*use_json*]
+#    (Optional) Use json for logging.
+#    Defaults to $::os_service_default.
+#
+#  [*use_journal*]
+#    (Optional) Use journal for logging.
+#    Defaults to $::os_service_default.
+#
 #  [*use_stderr*]
 #    (optional) Use stderr for logging.
 #    Defaults to $::os_service_default.
@@ -87,6 +95,8 @@
 #
 class heat::logging(
   $use_syslog                    = $::os_service_default,
+  $use_json                      = $::os_service_default,
+  $use_journal                   = $::os_service_default,
   $use_stderr                    = $::os_service_default,
   $log_facility                  = $::os_service_default,
   $log_dir                       = '/var/log/heat',
@@ -111,7 +121,11 @@ class heat::logging(
   $use_syslog_real = pick($::heat::use_syslog,$use_syslog)
   $use_stderr_real = pick($::heat::use_stderr,$use_stderr)
   $log_facility_real = pick($::heat::log_facility,$log_facility)
-  $log_dir_real = pick($::heat::log_dir,$log_dir)
+  if $log_dir != '' {
+    $log_dir_real = pick($::heat::log_dir,$log_dir)
+  } else {
+    $log_dir_real = $log_dir
+  }
   $debug_real = pick($::heat::debug,$debug)
 
   oslo::log { 'heat_config':
@@ -120,6 +134,8 @@ class heat::logging(
     log_date_format               => $log_date_format,
     log_dir                       => $log_dir_real,
     use_syslog                    => $use_syslog_real,
+    use_json                      => $use_json,
+    use_journal                   => $use_journal,
     syslog_log_facility           => $log_facility_real,
     use_stderr                    => $use_stderr_real,
     logging_context_format_string => $logging_context_format_string,

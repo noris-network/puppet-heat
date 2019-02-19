@@ -1,6 +1,7 @@
 - project:
-    name: openstack/puppet-heat
     templates:
       - puppet-openstack-check-jobs
       - puppet-openstack-module-unit-jobs
       - puppet-openstack-integration-jobs-scenario003
+      - puppet-openstack-beaker-jobs
+      - release-notes-jobs

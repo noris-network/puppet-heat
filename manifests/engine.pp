@@ -70,6 +70,18 @@
 #   endpoint which supports the provided keystone credentials (string value)
 #   Allowed values: CFN_SIGNAL, TEMP_URL_SIGNAL, HEAT_SIGNAL
 #   Defaults to $::os_service_default.
+#
+# [*default_user_data_format*]
+#   (optional) Template default for how the user_data should be
+#   formatted for the server. For HEAT_CFNTOOLS, the
+#   user_data is bundled as part of the heat-cfntools
+#   cloud-init boot configuration data. For RAW the
+#   user_data is passed to Nova unmodified. For
+#   SOFTWARE_CONFIG user_data is bundled as part of the
+#   software config data, and metadata is derived from any
+#   associated SoftwareDeployment resources.
+#   Allowed values: HEAT_CFNTOOLS, RAW, SOFTWARE_CONFIG
+#   Defaults to $::os_service_default.
 
 # [*trusts_delegated_roles*]
 #   (optional) Array of trustor roles to be delegated to heat.
@@ -91,7 +103,7 @@
 #
 # [*num_engine_workers*]
 #   (Optional) The number of workers to spawn.
-#   Defaults to $::os_service_default.
+#   Defaults to $::os_workers_heat_engine
 #
 # [*convergence_engine*]
 #   (Optional) Enables engine with convergence architecture.
@@ -113,6 +125,10 @@
 #   (Optional) Maximum depth allowed when using nested stacks.
 #   Defaults to $::os_service_default
 #
+# [*plugin_dirs*]
+#   (Optional) List of directories to search for plug-ins.
+#   Defaults to $::os_service_default
+#
 class heat::engine (
   $auth_encryption_key,
   $package_ensure                                  = 'present',
@@ -126,16 +142,18 @@ class heat::engine (
   $deferred_auth_method                            = $::os_service_default,
   $default_software_config_transport               = $::os_service_default,
   $default_deployment_signal_transport             = $::os_service_default,
+  $default_user_data_format                        = $::os_service_default,
   $trusts_delegated_roles                          = $::os_service_default,
   $instance_connection_is_secure                   = $::os_service_default,
   $instance_connection_https_validate_certificates = $::os_service_default,
   $max_resources_per_stack                         = $::os_service_default,
-  $num_engine_workers                              = $::os_service_default,
+  $num_engine_workers                              = $::os_workers_heat_engine,
   $convergence_engine                              = $::os_service_default,
   $reauthentication_auth_method                    = $::os_service_default,
   $environment_dir                                 = $::os_service_default,
   $template_dir                                    = $::os_service_default,
   $max_nested_stack_depth                          = $::os_service_default,
+  $plugin_dirs                                     = $::os_service_default,
 ) {
 
   include ::heat::deps
@@ -151,6 +169,17 @@ class heat::engine (
 
   include ::heat
   include ::heat::params
+
+  # plugin_dirs value follows these rules:
+  # - default is $::os_service_default so Puppet won't try to configure it.
+  # - if set, array validation will be done for not empty and then configure the parameter.
+  # - Otherwise, fallback to default.
+  if !is_service_default($plugin_dirs) and !empty($plugin_dirs) {
+    validate_array($plugin_dirs)
+    $plugin_dirs_real = join($plugin_dirs, ',')
+  } else {
+    $plugin_dirs_real = $::os_service_default
+  }
 
   package { 'heat-engine':
     ensure => $package_ensure,
@@ -176,7 +205,7 @@ class heat::engine (
   }
 
   heat_config {
-    'DEFAULT/auth_encryption_key':                             value => $auth_encryption_key;
+    'DEFAULT/auth_encryption_key':                             value => $auth_encryption_key, secret => true;
     'DEFAULT/heat_stack_user_role':                            value => $heat_stack_user_role;
     'DEFAULT/heat_metadata_server_url':                        value => $heat_metadata_server_url;
     'DEFAULT/heat_waitcondition_server_url':                   value => $heat_waitcondition_server_url;
@@ -184,6 +213,7 @@ class heat::engine (
     'DEFAULT/engine_life_check_timeout':                       value => $engine_life_check_timeout;
     'DEFAULT/default_software_config_transport':               value => $default_software_config_transport;
     'DEFAULT/default_deployment_signal_transport':             value => $default_deployment_signal_transport;
+    'DEFAULT/default_user_data_format':                        value => $default_user_data_format;
     'DEFAULT/trusts_delegated_roles':                          value => $trusts_delegated_roles;
     'DEFAULT/deferred_auth_method':                            value => $deferred_auth_method;
     'DEFAULT/max_resources_per_stack':                         value => $max_resources_per_stack;
@@ -195,5 +225,6 @@ class heat::engine (
     'DEFAULT/environment_dir':                                 value => $environment_dir;
     'DEFAULT/template_dir':                                    value => $template_dir;
     'DEFAULT/max_nested_stack_depth':                          value => $max_nested_stack_depth;
+    'DEFAULT/plugin_dirs':                                     value => $plugin_dirs_real;
   }
 }

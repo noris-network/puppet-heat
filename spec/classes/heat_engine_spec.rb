@@ -14,11 +14,13 @@ describe 'heat::engine' do
       :deferred_auth_method                => '<SERVICE DEFAULT>',
       :default_software_config_transport   => '<SERVICE DEFAULT>',
       :default_deployment_signal_transport => '<SERVICE DEFAULT>',
+      :default_user_data_format            => '<SERVICE DEFAULT>',
       :convergence_engine                  => '<SERVICE DEFAULT>',
       :reauthentication_auth_method        => '<SERVICE DEFAULT>',
       :environment_dir                     => '<SERVICE DEFAULT>',
       :template_dir                        => '<SERVICE DEFAULT>',
       :max_nested_stack_depth              => '<SERVICE DEFAULT>',
+      :plugin_dirs                         => '<SERVICE DEFAULT>',
     }
   end
 
@@ -43,6 +45,7 @@ describe 'heat::engine' do
         :deferred_auth_method                => 'trusts',
         :default_software_config_transport   => 'POLL_SERVER_CFN',
         :default_deployment_signal_transport => 'CFN_SIGNAL',
+        :default_user_data_format            => 'HEAT_CFNTOOLS',
         :num_engine_workers                  => '4',
         :convergence_engine                  => false,
         :reauthentication_auth_method        => 'trusts',
@@ -85,6 +88,7 @@ describe 'heat::engine' do
       it { is_expected.to contain_heat_config('DEFAULT/deferred_auth_method').with_value( expected_params[:deferred_auth_method] ) }
       it { is_expected.to contain_heat_config('DEFAULT/default_software_config_transport').with_value( expected_params[:default_software_config_transport] ) }
       it { is_expected.to contain_heat_config('DEFAULT/default_deployment_signal_transport').with_value( expected_params[:default_deployment_signal_transport] ) }
+      it { is_expected.to contain_heat_config('DEFAULT/default_user_data_format').with_value( expected_params[:default_user_data_format] ) }
       it { is_expected.to contain_heat_config('DEFAULT/instance_connection_is_secure').with_value('<SERVICE DEFAULT>') }
       it { is_expected.to contain_heat_config('DEFAULT/instance_connection_https_validate_certificates').with_value('<SERVICE DEFAULT>') }
       it { is_expected.to contain_heat_config('DEFAULT/max_resources_per_stack').with_value('<SERVICE DEFAULT>') }
@@ -93,6 +97,7 @@ describe 'heat::engine' do
       it { is_expected.to contain_heat_config('DEFAULT/reauthentication_auth_method').with_value( expected_params[:reauthentication_auth_method] ) }
       it { is_expected.to contain_heat_config('DEFAULT/environment_dir').with_value( expected_params[:environment_dir] ) }
       it { is_expected.to contain_heat_config('DEFAULT/template_dir').with_value( expected_params[:template_dir] ) }
+      it { is_expected.to contain_heat_config('DEFAULT/plugin_dirs').with_value('<SERVICE DEFAULT>') }
     end
 
     context 'with disabled service managing' do
@@ -111,6 +116,15 @@ describe 'heat::engine' do
         :tag        => 'heat-service',
       ) }
     end
+
+    context 'with plugin_dirs value set' do
+      before do
+        params.merge!({
+          :plugin_dirs => ['/usr/lib/heat', '/usr/local/lib/heat'] })
+      end
+      it { is_expected.to contain_heat_config('DEFAULT/plugin_dirs').with_value(['/usr/lib/heat,/usr/local/lib/heat']) }
+    end
+
     context 'with wrong auth_encryption_key parameter size' do
       before do
         params.merge!({
@@ -125,7 +139,7 @@ describe 'heat::engine' do
   }).each do |os,facts|
     context "on #{os}" do
       let (:facts) do
-        facts.merge!(OSDefaults.get_facts())
+        facts.merge!(OSDefaults.get_facts({:os_workers_heat_engine => 2}))
       end
 
       let :platform_params do

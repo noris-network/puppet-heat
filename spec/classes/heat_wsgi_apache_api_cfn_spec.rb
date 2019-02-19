@@ -11,16 +11,19 @@ describe 'heat::wsgi::apache_api_cfn' do
         :bind_host                   => nil,
         :path                        => '/',
         :ssl                         => true,
-        :workers                     => 1,
+        :workers                     => facts[:os_workers],
         :ssl_cert                    => nil,
         :ssl_key                     => nil,
         :ssl_chain                   => nil,
         :ssl_ca                      => nil,
         :ssl_crl_path                => nil,
         :ssl_certs_dir               => nil,
-        :threads                     => facts[:os_workers],
+        :wsgi_process_display_name   => nil,
+        :threads                     => 1,
         :priority                    => 10,
-        :custom_wsgi_process_options => {}, )
+        :custom_wsgi_process_options => {},
+        :access_log_file             => false,
+        :access_log_format           => false,)
       }
     end
   end

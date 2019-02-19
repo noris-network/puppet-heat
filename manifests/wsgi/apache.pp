@@ -13,7 +13,7 @@
 #
 # Resource to serve Heat API with apache mod_wsgi in place of heat-api service.
 #
-# This is useful for the main API as well as the CFN and Cloudwatch APIs.
+# This is useful for the main API as well as the CFN API.
 # Serving Heat API from apache is the recommended way to go for production
 # because of limited performance for concurrent accesses when running eventlet.
 #
@@ -23,7 +23,7 @@
 #
 #   [*title*]
 #     The heat API that will be running over this vhost.
-#     The valid options are "api", "api_cfn" and "api_cloudwatch"
+#     The valid options are "api" and "api_cfn"
 #
 #   [*port*]
 #     The port for the specific API.
@@ -46,7 +46,7 @@
 #
 #   [*workers*]
 #     Number of WSGI workers to spawn.
-#     Optional. Defaults to 1
+#     Optional. Defaults to $::os_workers
 #
 #   [*priority*]
 #     (optional) The priority for the vhost.
@@ -54,7 +54,7 @@
 #
 #   [*threads*]
 #     (optional) The number of threads for the vhost.
-#     Defaults to $::os_workers
+#     Defaults to 1
 #
 #   [*ssl_cert*]
 #   [*ssl_key*]
@@ -69,6 +69,18 @@
 #   [*vhost_custom_fragment*]
 #     (optional) Additional vhost configuration, if applicable.
 #
+#   [*access_log_file*]
+#     The log file name for the virtualhost.
+#     Optional. Defaults to false.
+#
+#   [*access_log_format*]
+#     The log format for the virtualhost.
+#     Optional. Defaults to false.
+#
+#   [*error_log_file*]
+#     The error log file name for the virtualhost.
+#     Optional. Defaults to undef.
+#
 #   [*custom_wsgi_process_options*]
 #     (optional) gives you the oportunity to add custom process options or to
 #     overwrite the default options for the WSGI main process.
@@ -76,6 +88,10 @@
 #     you could set it to:
 #     { python-path => '/my/python/virtualenv' }
 #     Defaults to {}
+#
+#   [*wsgi_process_display_name*]
+#     (optional) Name of the WSGI process display-name.
+#     Defaults to undef
 #
 # == Dependencies
 #
@@ -93,7 +109,7 @@ define heat::wsgi::apache (
   $bind_host                   = undef,
   $path                        = '/',
   $ssl                         = true,
-  $workers                     = 1,
+  $workers                     = $::os_workers,
   $ssl_cert                    = undef,
   $ssl_key                     = undef,
   $ssl_chain                   = undef,
@@ -101,13 +117,17 @@ define heat::wsgi::apache (
   $ssl_crl_path                = undef,
   $ssl_crl                     = undef,
   $ssl_certs_dir               = undef,
-  $threads                     = $::os_workers,
+  $threads                     = 1,
   $priority                    = '10',
   $vhost_custom_fragment       = undef,
+  $access_log_file             = false,
+  $access_log_format           = false,
+  $error_log_file              = undef,
   $custom_wsgi_process_options = {},
+  $wsgi_process_display_name   = undef,
 ) {
-  if $title !~ /^api(|_cfn|_cloudwatch)$/ {
-    fail('The valid options are api, api_cfn, api_cloudwatch')
+  if $title !~ /^api(|_cfn)$/ {
+    fail('The valid options are api, api_cfn')
   }
   include ::heat::deps
   include ::heat::params
@@ -136,6 +156,7 @@ define heat::wsgi::apache (
     user                        => 'heat',
     workers                     => $workers,
     wsgi_daemon_process         => "heat_${title}",
+    wsgi_process_display_name   => $wsgi_process_display_name,
     wsgi_process_group          => "heat_${title}",
     wsgi_script_dir             => $::heat::params::heat_wsgi_script_path,
     wsgi_script_file            => "heat_${title}",
@@ -144,5 +165,8 @@ define heat::wsgi::apache (
     allow_encoded_slashes       => 'on',
     require                     => Anchor['heat::install::end'],
     vhost_custom_fragment       => $vhost_custom_fragment,
+    access_log_file             => $access_log_file,
+    access_log_format           => $access_log_format,
+    error_log_file              => $error_log_file,
   }
 }

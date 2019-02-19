@@ -41,7 +41,7 @@
 #
 #   [*workers*]
 #     Number of WSGI workers to spawn.
-#     Optional. Defaults to 1
+#     Optional. Defaults to $::os_workers
 #
 #   [*priority*]
 #     (optional) The priority for the vhost.
@@ -49,7 +49,7 @@
 #
 #   [*threads*]
 #     (optional) The number of threads for the vhost.
-#     Defaults to $::os_workers
+#     Defaults to 1
 #
 #   [*ssl_cert*]
 #   [*ssl_key*]
@@ -61,6 +61,18 @@
 #     apache::vhost ssl parameters.
 #     Optional. Default to apache::vhost 'ssl_*' defaults.
 #
+#   [*access_log_file*]
+#     The log file name for the virtualhost.
+#     Optional. Defaults to false.
+#
+#   [*access_log_format*]
+#     The log format for the virtualhost.
+#     Optional. Defaults to false.
+#
+#   [*error_log_file*]
+#     The error log file name for the virtualhost.
+#     Optional. Defaults to undef.
+#
 #   [*custom_wsgi_process_options*]
 #     (optional) gives you the oportunity to add custom process options or to
 #     overwrite the default options for the WSGI main process.
@@ -68,6 +80,10 @@
 #     you could set it to:
 #     { python-path => '/my/python/virtualenv' }
 #     Defaults to {}
+#
+#   [*wsgi_process_display_name*]
+#     (optional) Name of the WSGI process display-name.
+#     Defaults to undef
 #
 # == Dependencies
 #
@@ -85,7 +101,7 @@ class heat::wsgi::apache_api (
   $bind_host                   = undef,
   $path                        = '/',
   $ssl                         = true,
-  $workers                     = 1,
+  $workers                     = $::os_workers,
   $ssl_cert                    = undef,
   $ssl_key                     = undef,
   $ssl_chain                   = undef,
@@ -93,9 +109,13 @@ class heat::wsgi::apache_api (
   $ssl_crl_path                = undef,
   $ssl_crl                     = undef,
   $ssl_certs_dir               = undef,
-  $threads                     = $::os_workers,
+  $threads                     = 1,
   $priority                    = '10',
+  $access_log_file             = false,
+  $access_log_format           = false,
+  $error_log_file              = undef,
   $custom_wsgi_process_options = {},
+  $wsgi_process_display_name   = undef,
 ) {
   heat::wsgi::apache { 'api':
     port                        => $port,
@@ -114,5 +134,9 @@ class heat::wsgi::apache_api (
     threads                     => $threads,
     custom_wsgi_process_options => $custom_wsgi_process_options,
     priority                    => $priority,
+    access_log_file             => $access_log_file,
+    access_log_format           => $access_log_format,
+    error_log_file              => $error_log_file,
+    wsgi_process_display_name   => $wsgi_process_display_name,
   }
 }

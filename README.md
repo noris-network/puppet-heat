@@ -1,7 +1,7 @@
 Team and repository tags
 ========================
 
-[![Team and repository tags](http://governance.openstack.org/badges/puppet-heat.svg)](http://governance.openstack.org/reference/tags/index.html)
+[![Team and repository tags](https://governance.openstack.org/tc/badges/puppet-heat.svg)](https://governance.openstack.org/tc/reference/tags/index.html)
 
 <!-- Change things from this point on -->
 
@@ -66,8 +66,6 @@ class { '::heat::api': }
 class { '::heat::engine':
   auth_encryption_key => '1234567890AZERTYUIOPMLKJHGFDSQ12',
 }
-
-class { '::heat::api_cloudwatch': }
 
 class { '::heat::api_cfn': }
 ```
